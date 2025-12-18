@@ -2,6 +2,9 @@ import express from "express";
 import fetch from "node-fetch";
 import path from "path";
 import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,7 +22,7 @@ app.use('/quizpage', express.static(path.join(__dirname, "quizpage")));
 
 /* ============================== */
 /* >>> OPENROUTER API KEY <<< */
-const OPENROUTER_API_KEY = "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";
+const OPENROUTER_API_KEY = process.env.DEEPSEEK_API_KEY ;
 /* ============================== */
 
 // ===============================
