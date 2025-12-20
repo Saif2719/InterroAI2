@@ -1,69 +1,64 @@
 // ================= Profile Dropdown =================
-document.getElementById('profileBtn').addEventListener('click', function () {
-    let menu = document.getElementById('dropdownMenu');
+document.getElementById('profileBtn')?.addEventListener('click', function () {
+    const menu = document.getElementById('dropdownMenu');
+    if (!menu) return;
+
     menu.style.display = (menu.style.display === 'flex') ? 'none' : 'flex';
-    menu.style.flexDirection = 'column'; // make dropdown vertical
+    menu.style.flexDirection = 'column';
 });
 
 // Handle logout click
-document.querySelector('#dropdownMenu a').addEventListener('click', function (e) {
-    e.preventDefault(); // Stop default link behavior
-    // Redirect to logout via PHP
+document.querySelector('#dropdownMenu a')?.addEventListener('click', function (e) {
+    e.preventDefault();
     window.location.href = "main.php?logout=true";
 });
 
-// ================= Hover Effect for Tags =================
-document.addEventListener('DOMContentLoaded', function() {
-    const tags = document.querySelectorAll('.role-tag');
-    
-    tags.forEach(tag => {
-        tag.addEventListener('mouseenter', function() {
+// ================= Hover + Click for Role Tags =================
+document.addEventListener('DOMContentLoaded', function () {
+    const roleTags = document.querySelectorAll('.role-tag');
+
+    roleTags.forEach(tag => {
+
+        // Hover effect
+        tag.addEventListener('mouseenter', function () {
             this.style.transform = 'translateY(-3px)';
             this.style.boxShadow = '0 5px 15px rgba(79, 70, 229, 0.2)';
         });
-        
-        tag.addEventListener('mouseleave', function() {
+
+        tag.addEventListener('mouseleave', function () {
             this.style.transform = 'translateY(0)';
             this.style.boxShadow = 'none';
         });
-    });
 
-    // ================= Role/Topic button click =================
-    const roleTags = document.querySelectorAll('.role-tag'); // exclude custom
-    roleTags.forEach(tag => {
-        tag.addEventListener('click', function() {
-            // Get the button text (trim spaces/newlines)
-            let role = this.innerText.trim();
+        // CLICK → generate quiz
+        tag.addEventListener('click', function () {
+            const topic = this.innerText.trim();
 
-            // Encode for safe URL
-            role = encodeURIComponent(role);
+            // Save topic for quiz page
+            localStorage.setItem('interroai_topic', topic);
 
-            // Redirect to quiz1.html with role as query parameter
-            window.location.href = `../quiz2page/quiz1.html?role=${role}`;
+            // ✅ CORRECT PATH
+            window.location.href = '/quizpage/quiz.html';
         });
     });
 });
 
 // ================= Custom Quiz Button =================
 function goToQuiz() {
-    // Use root-relative path; server serves /quizpage
+    localStorage.removeItem('interroai_topic'); // custom mode
     window.location.href = '/quizpage/quiz.html';
 }
 
-// ================= Force reload on back/forward safely =================
-(function() {
+// ================= Safe back/forward reload =================
+(function () {
     try {
         if (window.history && window.history.replaceState) {
             window.history.replaceState(null, null, window.location.href);
         }
 
-        window.addEventListener('pageshow', function(event) {
-            const perfEntries = window.performance ? window.performance.getEntriesByType("navigation") : [];
-            const navType = perfEntries[0] ? perfEntries[0].type : null;
-
-            if (event.persisted || navType === "back_forward") {
-                // Force reload to trigger PHP session check
-                window.location.href = window.location.href;
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                window.location.reload();
             }
         });
     } catch (e) {

@@ -16,14 +16,17 @@ const summaryBox = document.getElementById('summaryBox');
 const answersList = document.getElementById('answersList');
 const restartBtn = document.getElementById('restartBtn');
 
-
 let questions = [];
 let currentIndex = 0;
 let answers = [];
+let currentTopic = "";
+
+/* ================= UI Helpers ================= */
 
 function uiBusy(on) {
-  document.getElementById('startBtn').disabled = on;
-  topicInput.disabled = on;
+  const startBtn = document.getElementById('startBtn');
+  if (startBtn) startBtn.disabled = on;
+  if (topicInput) topicInput.disabled = on;
   statusEl.textContent = on ? 'Generating 10 questions…' : '';
 }
 
@@ -51,10 +54,12 @@ function startQuiz(newQuestions) {
   quizBox.classList.remove('hidden');
   showQuestion(currentIndex);
 }
+
+/* ================= API Call ================= */
+
 async function generateQuestions(topic) {
   try {
     uiBusy(true);
-    statusEl.textContent = "Generating 10 questions…";
 
     const res = await fetch("/api/generate-questions", {
       method: "POST",
@@ -70,9 +75,7 @@ async function generateQuestions(topic) {
       return;
     }
 
-    // 🔥 THIS WAS MISSING
     startQuiz(data.questions);
-
     statusEl.textContent = "";
   } catch (err) {
     console.error(err);
@@ -82,44 +85,7 @@ async function generateQuestions(topic) {
   }
 }
 
-skipBtn.addEventListener('click', () => {
-  answers.push({
-    id: questions[currentIndex].id,
-    question: questions[currentIndex].question,
-    answer: ''
-  });
-  currentIndex++;
-  if (currentIndex < questions.length) {
-    showQuestion(currentIndex);
-  } else {
-    quizBox.classList.add('hidden');
-    summaryBox.classList.remove('hidden');
-  }
-});
-
-restartBtn?.addEventListener('click', () => {
-  summaryBox.classList.add('hidden');
-  topicInput.value = '';
-  questions = [];
-  answers = [];
-  currentIndex = 0;
-  updateProgress();
-});
-document.getElementById("closeBtn").addEventListener("click", function () {
-  window.location.href = '/'; // redirect to main page (served from /)
-});
-
-
-let currentTopic = "";  // store topic globally
-
-topicForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const topic = topicInput.value.trim();
-  if (!topic) return;
-  currentTopic = topic;   //  save topic for evaluation step
-  generateQuestions(topic);
-});
-
+/* ================= Button Logic ================= */
 
 submitAnswerBtn.addEventListener('click', () => {
   if (!questions[currentIndex]) return;
@@ -135,19 +101,71 @@ submitAnswerBtn.addEventListener('click', () => {
   if (currentIndex < questions.length) {
     showQuestion(currentIndex);
   } else {
-    // Quiz finished
     quizBox.classList.add('hidden');
     summaryBox.classList.remove('hidden');
 
-    // Show all Q&A in summary
     answersList.innerHTML = '';
     answers.forEach((a, i) => {
       const li = document.createElement('li');
       li.innerHTML = `<strong>Q${i + 1}:</strong> ${a.question}<br>
-                      <em>Your answer:</em> ${a.answer || '<span style="color:#94a3b8">[skipped]</span>'}`;
+        <em>Your answer:</em> ${a.answer || '<span style="color:#94a3b8">[skipped]</span>'}`;
       answersList.appendChild(li);
     });
 
     updateProgress();
   }
+});
+
+skipBtn.addEventListener('click', () => {
+  answers.push({
+    id: questions[currentIndex].id,
+    question: questions[currentIndex].question,
+    answer: ''
+  });
+
+  currentIndex++;
+  if (currentIndex < questions.length) {
+    showQuestion(currentIndex);
+  } else {
+    quizBox.classList.add('hidden');
+    summaryBox.classList.remove('hidden');
+  }
+});
+
+restartBtn?.addEventListener('click', () => {
+  summaryBox.classList.add('hidden');
+  questions = [];
+  answers = [];
+  currentIndex = 0;
+  updateProgress();
+});
+
+document.getElementById("closeBtn")?.addEventListener("click", () => {
+  window.location.href = '/';
+});
+
+/* ================= ENTRY POINT ================= */
+
+// 1️⃣ If opened via role-tag
+const savedTopic = localStorage.getItem('interroai_topic');
+
+if (savedTopic) {
+  currentTopic = savedTopic;
+  localStorage.removeItem('interroai_topic');
+
+  // 🔥 Hide topic input UI
+  if (topicForm) topicForm.style.display = 'none';
+  document.querySelector('.muted').innerHTML =
+    "I’ll generate 10 questions. You’ll answer them one by one.";
+
+  generateQuestions(currentTopic);
+}
+
+// 2️⃣ Manual topic entry (custom)
+topicForm?.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const topic = topicInput.value.trim();
+  if (!topic) return;
+  currentTopic = topic;
+  generateQuestions(topic);
 });

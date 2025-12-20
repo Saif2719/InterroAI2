@@ -27,11 +27,10 @@ body {
 
 nav {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
-    margin-right: 167px;
+    /* background-color: #e7dada; */
     padding: 20px 40px;
-    border-bottom: 1px solid #eee;
 
 }
 @keyframes fadeInUp {
@@ -281,7 +280,7 @@ nav {
     background-color: #f4f4f4;
     color: #333;
     font-size: 14px;
-    margin-top: 30px;
+    margin-top: 80px;
     border-top: 1px solid #ddd;
 }
 
